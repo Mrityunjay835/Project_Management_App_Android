@@ -3,9 +3,11 @@ package com.pack.projectmanagementapp.services.repo
 import android.annotation.SuppressLint
 import android.util.Log
 import androidx.lifecycle.LiveData
+import androidx.lifecycle.Observer
 import com.pack.projectmanagementapp.entities.Product
 import com.pack.projectmanagementapp.entities.ProductsDetails
 import com.pack.projectmanagementapp.services.local.ProductDao
+import kotlinx.coroutines.Dispatchers
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -24,6 +26,7 @@ class ProductRepository(
         return productDao.getProductById(id)
     }
 
+
     suspend fun insert(productList: ArrayList<Product>) {
         //Log.d("afterFetchDataFromApi","${productList[0]}")
         for (de in productList) {
@@ -31,12 +34,18 @@ class ProductRepository(
         }
     }
 
+
+
     suspend fun update(dataEntity: Product) {
         productDao.updateProduct((dataEntity))
     }
 
     suspend fun delete(dataEntity: Product) {
         productDao.deleteProduct(dataEntity)
+    }
+
+    fun deleteById(id: Int){
+        productDao.deleteProductById(id)
     }
 
 

@@ -2,6 +2,7 @@ package com.pack.projectmanagementapp.ui.adapter
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -13,10 +14,13 @@ import com.pack.projectmanagementapp.entities.Product
 class RecycleViewHomeAdapter(
     private var context: Context,
     private var onItemClickListener: OnProductClickListener,
-    private var onItemLongClickListener: OnProductLongClickListener
+    private var onUpdateDeleteList:OnDeleteListUpdate,
+    private val showDeleteComponents: (Boolean) -> Unit
 ) : RecyclerView.Adapter<RecycleViewHomeAdapter.RecycleViewHomeHolder>() {
 
     private var products: MutableList<Product> = mutableListOf()
+    var selectedDeleteItem: MutableList<Int> = mutableListOf()
+    private var isAllSelectFalse = false
 
     class RecycleViewHomeHolder(var binding: ViewProductBinding) :
         RecyclerView.ViewHolder(binding.root)
@@ -45,6 +49,15 @@ class RecycleViewHomeAdapter(
         //holder.binding.imageUrl =product.thumbnail
         holder.binding.executePendingBindings()
 
+        if(isAllSelectFalse){
+            product.isSelected=false
+            updateView(holder,product)
+            if(product.id== products.size){
+                isAllSelectFalse=false
+                selectedDeleteItem.clear()
+            }
+        }
+
         if (product.isSelected) {
             holder.binding.icoSelected.visibility = View.VISIBLE
             holder.itemView.setBackgroundColor(R.color.white)
@@ -54,22 +67,61 @@ class RecycleViewHomeAdapter(
         }
 
         holder.itemView.setOnClickListener {
-            if (product.isSelected) {
-                product.isSelected = false
-                //if the item isSelected then update the ui and make them unSelected
-                holder.binding.icoSelected.visibility = View.GONE
-                holder.itemView.setBackgroundColor(R.color.black)
-            } else {
+            Log.i("checkSelectedDeleteItem","selectedDeleteItem size =${selectedDeleteItem.size}")
+            if (selectedDeleteItem.isEmpty()) {
+               Log.i("checkSelectedDeleteItem","selectedDeleteItem size =${selectedDeleteItem.size}")
                 onItemClickListener.onProductClick(product)
+            } else {
+                if (product.isSelected) {
+                    //if the item isSelected then update the ui and make them unSelected
+                    updateView(holder, product)
+                } else {
+                    updateViewOnDelete(holder, product)
+                }
+
             }
         }
 
         holder.itemView.setOnLongClickListener {
-            onItemLongClickListener.onProductLongClick(position)
-            product.isSelected = true
+//            showDeleteComponents(true)//------------------------
+//            product.isSelected = true//------------------
+//            selectedDeleteItem.add(product.id)//-----------------------
+            if (product.isSelected) {
+                //if the item isSelected then update the ui and make them unSelected
+                updateView(holder, product)
+            } else {
+                updateViewOnDelete(holder, product)
+            }
             notifyItemChanged(position)
             true
         }
+    }
+
+    @SuppressLint("ResourceAsColor")
+    fun updateViewOnDelete(holder: RecycleViewHomeHolder, product: Product) {
+        holder.itemView.setBackgroundColor(R.color.white)
+        holder.binding.icoSelected.visibility = View.VISIBLE
+        selectedDeleteItem.add(product.id)
+        product.isSelected = true
+        showDeleteComponents(true)
+        onUpdateDeleteList.addDeletedProductId(product.id)
+    }
+
+    @SuppressLint("ResourceAsColor")
+    fun updateView(holder: RecycleViewHomeHolder, product: Product) {
+        holder.itemView.setBackgroundColor(R.color.black)
+        holder.binding.icoSelected.visibility = View.GONE
+        selectedDeleteItem.remove(product.id)
+        onUpdateDeleteList.removeDeletedProductId(product.id)
+        product.isSelected = false
+        if (selectedDeleteItem.isEmpty())
+            showDeleteComponents(false)
+    }
+
+    fun clearAllSelectedItem() {
+        Log.i("clearAllSelectedItem","Yes")
+        isAllSelectFalse =true
+        this.notifyDataSetChanged()
     }
 
 
@@ -77,9 +129,16 @@ class RecycleViewHomeAdapter(
         fun onProductClick(product: Product)
     }
 
-    interface OnProductLongClickListener {
-        fun onProductLongClick(position: Int)
+    interface OnDeleteListUpdate{
+        fun addDeletedProductId(id:Int)
+        fun removeDeletedProductId(id:Int)
     }
+
+
+//    fun clearList(){
+//
+//    }
+
 
 
 }

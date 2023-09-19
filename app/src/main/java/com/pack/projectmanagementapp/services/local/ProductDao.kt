@@ -16,7 +16,6 @@ interface ProductDao {
 
     @Delete
     suspend fun deleteProduct(dataEntity: Product)
-
     //    @Update(onConflict = OnConflictStrategy.IGNORE)
     @Update
     suspend fun updateProduct(dataEntity: Product)
@@ -24,6 +23,13 @@ interface ProductDao {
     @Query("SELECT * FROM product_table ORDER BY category DESC")
     fun getAllProduct(): LiveData<List<Product>>
 
-    @Query("SELECT * FROM product_table WHERE id=:id")
+    @Query("SELECT * FROM product_table WHERE id = :id")
     fun getProductById(id:Int):LiveData<Product>
+
+    @Query("DELETE FROM product_table WHERE id = :id")
+    fun deleteProductById(id: Int)
+
+
+
+
 }

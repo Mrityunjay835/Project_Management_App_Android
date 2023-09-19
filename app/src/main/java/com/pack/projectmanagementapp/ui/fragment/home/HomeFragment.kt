@@ -6,7 +6,6 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.core.view.setPadding
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -18,15 +17,20 @@ import com.pack.projectmanagementapp.ui.fragment.product.ProductFragment
 import com.pack.projectmanagementapp.viewModel.HomeFragmentViewModel
 import com.pack.projectmanagementapp.viewModel.HomeFragmentViewModelFactory
 
-class HomeFragment : Fragment(), RecycleViewHomeAdapter.OnProductClickListener, RecycleViewHomeAdapter.OnProductLongClickListener {
+class HomeFragment : Fragment(), RecycleViewHomeAdapter.OnProductClickListener, RecycleViewHomeAdapter.OnDeleteListUpdate{
 
+    private lateinit var dataPassListener: DataPassListener
     private lateinit var viewModel: HomeFragmentViewModel
     private lateinit var binding: FragmentHomeBinding
     private val productList = ArrayList<Product>()
-    private lateinit var dataPassListener: DataPassListener
-
+    private var count=1;
+    private var listOfIdOfProductDeleted = ArrayList<Int>()
     private val rvHomeAdapter by lazy {
-        RecycleViewHomeAdapter(requireContext(), this,this)
+        RecycleViewHomeAdapter(
+            requireContext(),
+            this,this
+        )
+        { show -> showDeleteComponent(show) }
     }
 
     override fun onCreateView(
@@ -43,6 +47,27 @@ class HomeFragment : Fragment(), RecycleViewHomeAdapter.OnProductClickListener, 
         initViewModel()
         observeProductData()
         fetchProductDetailsApi()
+
+        binding.clDeleteDetailsButton.setOnClickListener {
+            //write the delete event listener
+            viewModel.deleteAllProduct(listOfIdOfProductDeleted)
+            rvHomeAdapter.notifyDataSetChanged()
+            showDeleteComponent(false)
+            rvHomeAdapter.selectedDeleteItem.clear()
+            count=0
+
+        }
+
+        binding.ivCross.setOnClickListener {
+            listOfIdOfProductDeleted.clear()
+            rvHomeAdapter.clearAllSelectedItem()
+            showDeleteComponent(false)
+        }
+        binding.tvDeleteCount.setOnClickListener {
+            listOfIdOfProductDeleted.clear()
+            rvHomeAdapter.clearAllSelectedItem()
+            showDeleteComponent(false)
+        }
     }
 
     private fun setupRecyclerView() {
@@ -67,6 +92,7 @@ class HomeFragment : Fragment(), RecycleViewHomeAdapter.OnProductClickListener, 
                 Log.e("HomeFragment", "Error in LiveData observer: ${e.message}", e)
             }
         }
+
     }
 
     private fun fetchProductDetailsApi() {
@@ -91,12 +117,6 @@ class HomeFragment : Fragment(), RecycleViewHomeAdapter.OnProductClickListener, 
         fun onDataPassed(data: Product)
     }
 
-    interface IOnBackPressed {
-        fun onBackPressed():Boolean
-    }
-
-
-
 
     override fun onProductClick(product: Product) {
         sendDataToProductFragment(product)
@@ -107,11 +127,31 @@ class HomeFragment : Fragment(), RecycleViewHomeAdapter.OnProductClickListener, 
         transaction.commit()
     }
 
-    override fun onProductLongClick(position:Int) {
+    fun showDeleteComponent(show: Boolean): Unit {
+        if(show){
+            binding.clDeleteDetailsButton.visibility = View.VISIBLE
+            binding.clDeleteDetailsCount.visibility = View.VISIBLE
+        }else{
+            binding.clDeleteDetailsButton.visibility = View.GONE
+            binding.clDeleteDetailsCount.visibility = View.GONE
+        }
 
     }
 
+    override fun addDeletedProductId(id: Int) {
+        listOfIdOfProductDeleted.add(id)
+        binding.tvDeleteCount.text=rvHomeAdapter.selectedDeleteItem.size.toString()
+        Log.i("listOfIdOfProductDeletedTestingP", "count List : $count")
 
+    }
+
+    override fun removeDeletedProductId(id: Int) {
+        listOfIdOfProductDeleted.remove(id)
+        binding.tvDeleteCount.text=rvHomeAdapter.selectedDeleteItem.size.toString()
+
+        Log.i("listOfIdOfProductDeletedTestingN", "count List : $count")
+
+    }
 
 
 }

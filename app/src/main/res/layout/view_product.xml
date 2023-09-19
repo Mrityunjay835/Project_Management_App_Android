@@ -12,10 +12,12 @@
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/clMain"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@color/black"
-        android:padding="16dp">
+        android:padding="16dp"
+        android:layout_marginVertical="2dp">
 
         <ImageView
             android:id="@+id/ivThumbnail"
@@ -23,6 +25,7 @@
             android:layout_height="100dp"
             android:adjustViewBounds="true"
             android:scaleType="centerCrop"
+            android:background="@drawable/listimage_bg"
             app:imageUrl="@{productData.thumbnail}"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintDimensionRatio="1:1"
